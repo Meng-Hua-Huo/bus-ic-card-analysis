@@ -5,13 +5,15 @@ plt.rcParams['axes.unicode_minus'] = False          # 正常显示负号
 
 import pandas as pd
 import numpy as np
-
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'ICData.csv')
 
 def task1_preprocessing(csv_path='ICData.csv'):
     """任务1：数据预处理"""
 
     # 读取数据
-    df = pd.read_csv(r'/bus-ic-card-analysis/data/ICData.csv', sep=',')
+    df = pd.read_csv(DATA_PATH, sep=',')
     print("【1. 数据读取完成】")
     print(df.head(5), "\n")  # 打印前5行
 
@@ -75,7 +77,7 @@ def task2_time_distribution(df):
     hourly_counts = np.zeros(24, dtype=int)
     hourly_counts[unique_hours] = counts  # 将实际出现的频次映射到对应小时索引
 
-    # 5. 绘制 24 小时分布柱状图
+    # 绘制 24 小时分布柱状图
     plt.figure(figsize=(12, 6))
     plt.bar(np.arange(24), hourly_counts, color='skyblue', edgecolor='black', alpha=0.8)
 
