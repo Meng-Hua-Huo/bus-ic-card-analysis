@@ -47,9 +47,69 @@ def task1_preprocessing(csv_path='ICData.csv'):
     return df
 
 
+def task2_time_distribution(df):
+    """任务2：时间分布分析 """
+    print("=" * 30 + " 开始任务 2 " + "=" * 30)
+
+    # 筛选有效刷卡类型，并提取 hour 列转为 numpy 数组
+    df_type0 = df[df['刷卡类型'] == 0].copy()
+    hours_arr = df_type0['hour'].to_numpy()
+    total_swipes = len(hours_arr)
+
+    # 早晚时段刷卡量统计
+    early_count = np.sum(hours_arr < 7)  # 早7点前
+    late_count = np.sum(hours_arr >= 22)  # 晚22点后
+
+    # 计算占比并打印
+    early_ratio = (early_count / total_swipes) * 100 if total_swipes > 0 else 0
+    late_ratio = (late_count / total_swipes) * 100 if total_swipes > 0 else 0
+
+    print(f"【2(a) 早晚时段统计结果】")
+    print(f" 早7点前刷卡量: {early_count} 次 (占比 {early_ratio:.2f}%)")
+    print(f" 晚22点后刷卡量: {late_count} 次 (占比 {late_ratio:.2f}%)")
+    print(f" 全天总刷卡量: {total_swipes} 次")
+    print("-" * 50)
+
+    # 构造 24 小时分布数据
+    unique_hours, counts = np.unique(hours_arr, return_counts=True)
+    hourly_counts = np.zeros(24, dtype=int)
+    hourly_counts[unique_hours] = counts  # 将实际出现的频次映射到对应小时索引
+
+    # 5. 绘制 24 小时分布柱状图
+    plt.figure(figsize=(12, 6))
+    plt.bar(np.arange(24), hourly_counts, color='skyblue', edgecolor='black', alpha=0.8)
+
+    # 配置坐标轴与样式
+    plt.title('24小时刷卡量分布图', fontsize=15, fontweight='bold')
+    plt.xlabel('小时 (0-23)', fontsize=12)
+    plt.ylabel('刷卡量 (次)', fontsize=12)
+    plt.xticks(np.arange(0, 24, 2))  # X轴刻度步长为2
+    plt.grid(axis='y', linestyle='--', alpha=0.6)  # 开启Y轴网格线
+
+    # 保存图像并清理画布
+    plt.tight_layout()
+    plt.savefig('hour_distribution.png', dpi=150, bbox_inches='tight')
+    print(" 【2(b) 可视化完成】图像已保存为 hour_distribution.png")
+    plt.show()
+    plt.close()  # 释放内存，防止影响后续任务绘图
+
+    print("=" * 30 + " 任务 2 结束 " + "=" * 30)
+
+
 # 执行预处理
 if __name__ == "__main__":
-    df_clean = task1_preprocessing()
-    # 预览处理后的数据结构
-    print("\n预处理后DataFrame结构预览：")
-    print(df_clean.head())
+    try:
+        # 数据预处理
+        df_clean = task1_preprocessing('ICData.csv')
+
+        # 数据有效性校验 & 流程串联
+        if df_clean is not None and not df_clean.empty:
+            print("\n 任务1成功完成，数据已清洗。开始执行任务2...")
+            task2_time_distribution(df_clean)  # 传入清洗后的DataFrame
+            print("\n 任务2执行完毕！请检查根目录是否生成 hour_distribution.png")
+        else:
+            print(" 警告：任务1返回空数据或失败，已跳过任务2。")
+
+    except Exception as e:
+        print(f" 程序运行中断: {e}")
+        print(" 建议：检查ICData.csv路径、列名是否匹配，或终端上方报错信息。")
