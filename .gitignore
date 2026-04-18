@@ -1,0 +1,39 @@
+# 虚拟环境（避免上传几百 MB 的依赖库）
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
+
+# 数据文件（根据作业要求决定是否忽略）
+# 本次作业需要提交 ICData.csv，所以不要忽略 data/ 文件夹
+# 如果数据文件很大，可以取消下面一行的注释
+# data/*.csv
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE 配置（PyCharm）
+../.idea/
+*.iml
+.vscode/
+
+# 任务输出（本次作业要求提交图表和 txt，所以不要忽略 figures/ 和 output/）
+# 但可以忽略临时生成的文件
+*.log
+*.tmp
+
+# Jupyter 笔记本输出（可选）
+*.ipynb_checkpoints
