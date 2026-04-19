@@ -169,23 +169,49 @@ def calculate_phf(df):
 
     return {"peak_hour": peak_h, "PHF15": phf_15, "PHF5": phf_5}
 
+def export_route_driver_info(df, output_dir='线路驾驶员信息', target_count=20):
+    """批量导出线路-车辆-驾驶员关系"""
 
-def export_route_driver_info(df, output_dir='线路驾驶员信息', route_range=range(1101, 1121)):
-    """任务5：导出各线路车辆与驾驶员关系"""
+    # 防止空表传入
+    if df.empty:
+        raise ValueError("❌ 数据为空！请检查任务1/2是否误删了全部记录。")
 
     # 创建输出目录
     os.makedirs(output_dir, exist_ok=True)
 
-    # 筛选目标线路数据
-    target_routes = [str(r) for r in route_range]
-    df_target = df[df['线路号'].isin(target_routes)].copy()
+    # 统一列名与数据类型
+    df_exp = df.copy()
+    # 将关键列统一转为字符串并去除首尾空格
+    for col in ['线路号', '车辆编号', '驾驶员编号']:
+        if col in df_exp.columns:
+            df_exp[col] = df_exp[col].astype(str).str.strip()
+        else:
+            # 兼容不同CSV列名写法
+            alt_names = {'线路号': ['线路', 'RouteID'], '车辆编号': ['车号', 'VehicleID'],
+                         '驾驶员编号': ['司机', 'DriverID']}
+            for alt in alt_names.get(col, []):
+                if alt in df_exp.columns:
+                    df_exp.rename(columns={alt: col}, inplace=True)
+                    df_exp[col] = df_exp[col].astype(str).str.strip()
+                    break
+
+    # 获取目标线路
+    all_routes = sorted(df_exp['线路号'].unique())
+    target_routes = all_routes[:target_count]
+    print(f" 数据集中共 {len(all_routes)} 条线路，本次将导出前 {target_count} 条: {target_routes}")
 
     export_count = 0
-    # 按线路号分组遍历
-    for route_id, group in df_target.groupby('线路号'):
+    # 遍历生成TXT
+    for route_id in target_routes:
+        group = df_exp[df_exp['线路号'] == route_id]
+        # 提取唯一对应关系
         mapping = group[['车辆编号', '驾驶员编号']].drop_duplicates()
 
-        # 严格命名文件并写入
+        if mapping.empty:
+            print(f" 跳过线路 {route_id}：无有效车辆/驾驶员数据")
+            continue
+
+        # 严格命名与写入
         file_path = os.path.join(output_dir, f"{route_id}.txt")
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(f"线路号: {route_id}\n")
@@ -194,7 +220,7 @@ def export_route_driver_info(df, output_dir='线路驾驶员信息', route_range
                 f.write(f"{row['车辆编号']}\t{row['驾驶员编号']}\n")
         export_count += 1
 
-    print(f"✅ 【任务5批量导出完成】在 '{output_dir}' 目录下成功生成 {export_count} 个txt文件。")
+    print(f"【任务5完成】在 '{output_dir}'生成 {export_count} 个txt文件。")
     return export_count
 
 # 执行预处理
