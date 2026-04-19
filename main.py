@@ -170,6 +170,33 @@ def calculate_phf(df):
     return {"peak_hour": peak_h, "PHF15": phf_15, "PHF5": phf_5}
 
 
+def export_route_driver_info(df, output_dir='线路驾驶员信息', route_range=range(1101, 1121)):
+    """任务5：导出各线路车辆与驾驶员关系"""
+
+    # 创建输出目录
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 筛选目标线路数据
+    target_routes = [str(r) for r in route_range]
+    df_target = df[df['线路号'].isin(target_routes)].copy()
+
+    export_count = 0
+    # 按线路号分组遍历
+    for route_id, group in df_target.groupby('线路号'):
+        mapping = group[['车辆编号', '驾驶员编号']].drop_duplicates()
+
+        # 严格命名文件并写入
+        file_path = os.path.join(output_dir, f"{route_id}.txt")
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(f"线路号: {route_id}\n")
+            f.write("车辆编号\t驾驶员编号\n")
+            for _, row in mapping.iterrows():
+                f.write(f"{row['车辆编号']}\t{row['驾驶员编号']}\n")
+        export_count += 1
+
+    print(f"✅ 【任务5批量导出完成】在 '{output_dir}' 目录下成功生成 {export_count} 个txt文件。")
+    return export_count
+
 # 执行预处理
 if __name__ == "__main__":
     try:
@@ -187,6 +214,8 @@ if __name__ == "__main__":
         route_stats = analyze_route_stops(df_clean)
         plot_route_stops(route_stats)
         calculate_phf(df_clean)
+        export_route_driver_info(df_clean)
+
 
     except Exception as e:
         print(f" 程序运行中断: {e}")
