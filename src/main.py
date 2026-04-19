@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, 'data', 'ICData.csv')
+DATA_PATH = os.path.join(BASE_DIR, '../data', 'ICData.csv')
 
 def task1_preprocessing(csv_path='ICData.csv'):
     """任务1：数据预处理"""
