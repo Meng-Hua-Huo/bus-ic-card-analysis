@@ -133,6 +133,43 @@ def plot_route_stops(route_stats_df):
     plt.show()
     plt.close()
 
+def calculate_phf(df):
+    """任务4：高峰小时系数(PHF)计算"""
+    print("=" * 30 + " 开始任务 4 " + "=" * 30)
+
+    # 自动识别高峰小时
+    hourly_volume = df.groupby('hour').size()
+    peak_h = hourly_volume.idxmax()
+    V60 = hourly_volume.max()  # 高峰小时总流量
+
+    # 筛选高峰小时内的所有记录
+    df_peak = df[df['hour'] == peak_h].copy()
+
+    # 计算15分钟粒度最大流量
+    df_peak['bin_15'] = df_peak['交易时间'].dt.minute // 15
+    V15_max = df_peak.groupby('bin_15').size().max()
+
+    # 计算5分钟粒度最大流量
+    df_peak['bin_5'] = df_peak['交易时间'].dt.minute // 5
+    V5_max = df_peak.groupby('bin_5').size().max()
+
+    # 代入PHF公式计算
+    phf_15 = V60 / (4 * V15_max) if V15_max > 0 else 1.0
+    phf_5 = V60 / (12 * V5_max) if V5_max > 0 else 1.0
+
+    # 格式化输出
+    print(f"【4. 高峰小时系数计算结果】")
+    print(f" 高峰时段: {peak_h}:00 - {peak_h}:59")
+    print(f" 高峰小时总流量(V60)   : {V60} 次")
+    print(f" 最大15分钟流量(V15_max): {V15_max} 次")
+    print(f" 最大5分钟流量(V5_max) : {V5_max} 次")
+    print(f" PHF15 (15分钟粒度)   : {phf_15:.3f}")
+    print(f" PHF5  (5分钟粒度)    : {phf_5:.3f}")
+    print("-" * 50)
+
+    return {"peak_hour": peak_h, "PHF15": phf_15, "PHF5": phf_5}
+
+
 # 执行预处理
 if __name__ == "__main__":
     try:
@@ -149,6 +186,7 @@ if __name__ == "__main__":
 
         route_stats = analyze_route_stops(df_clean)
         plot_route_stops(route_stats)
+        calculate_phf(df_clean)
 
     except Exception as e:
         print(f" 程序运行中断: {e}")
