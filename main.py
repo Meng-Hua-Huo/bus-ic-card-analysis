@@ -223,6 +223,67 @@ def export_route_driver_info(df, output_dir='线路驾驶员信息', target_coun
     print(f"【任务5完成】在 '{output_dir}'生成 {export_count} 个txt文件。")
     return export_count
 
+
+def task6_performance_heatmap(df):
+    """任务6：服务绩效排名与热力图可视化"""
+    print("=" * 30 + " 开始任务 6 " + "=" * 30)
+
+    # 定义绩效维度与对应数据列名
+    dims = {
+        '司机': '驾驶员编号',
+        '线路': '线路号',
+        '上车站点': '上车站点',
+        '车辆': '车辆编号'
+    }
+
+    # 提取各维度 Top10 服务人次
+    top10_matrix = []
+    for dim_name, col_name in dims.items():
+        counts = df[col_name].value_counts().head(10).values
+        top10_matrix.append(counts)
+
+    # 构造热力图数据框
+    heatmap_data = pd.DataFrame(
+        top10_matrix,
+        index=list(dims.keys()),
+        columns=[f'Top{i + 1}' for i in range(10)]
+    )
+
+    # 绘制热力图
+    plt.figure(figsize=(11, 6))
+    sns.heatmap(
+        heatmap_data,
+        annot=True,
+        fmt='.0f',
+        cmap='YlOrRd',
+        linewidths=0.5,
+        cbar_kws={'label': '服务人次(次)'},
+        square=False
+    )
+
+    # 图表元素配置
+    plt.title('各维度服务绩效Top10分布热力图', fontsize=15, fontweight='bold', pad=15)
+    plt.suptitle('注：数值越高代表该实体承担的乘客服务负荷越重', fontsize=10, color='gray', y=0.98)
+    plt.xlabel('排名位次', fontsize=12)
+    plt.ylabel('绩效维度', fontsize=12)
+    plt.xticks(rotation=0)
+    plt.yticks(rotation=0)
+
+    # 保存图像与释放资源
+    plt.tight_layout()
+    plt.savefig('performance_heatmap.png', dpi=150, bbox_inches='tight')
+    print("【任务6可视化完成】图像已保存为 performance_heatmap.png")
+    plt.close()
+
+    # 结论说明
+    conclusion = """
+    热力图显示，线路与上车站点维度的Top1-Top3数值上前几名占了大部分，说明城市公交客流高度依赖少数核心干线与枢纽站；
+    而司机与车辆维度的Top10数值落差较小，分布相对均匀，反映出现分配班次较为均衡。建议后续针对高负荷线路在高峰期加开班次，
+    以维持高峰时段服务的稳定。
+    """
+    print(conclusion)
+    return heatmap_data
+
 # 执行预处理
 if __name__ == "__main__":
     try:
@@ -241,6 +302,8 @@ if __name__ == "__main__":
         plot_route_stops(route_stats)
         calculate_phf(df_clean)
         export_route_driver_info(df_clean)
+        task6_performance_heatmap(df_clean)
+
 
 
     except Exception as e:
