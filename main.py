@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 plt.rcParams['font.sans-serif'] = ['SimHei']        # 使用黑体显示中文
 plt.rcParams['axes.unicode_minus'] = False          # 正常显示负号
@@ -98,6 +99,40 @@ def task2_time_distribution(df):
     print("=" * 30 + " 任务 2 结束 " + "=" * 30)
 
 
+def analyze_route_stops(data_df):
+    """任务3：计算各线路 ride_stops 的均值与标准差"""
+    #  按线路号分组，计算均值和标准差
+    route_stats = data_df.groupby('线路号')['ride_stops'].agg(['mean', 'std']).reset_index()
+
+    # 若某线路仅1条记录，std会返回NaN，必须填充为0否则绘图报错
+    route_stats['std'] = route_stats['std'].fillna(0)
+
+    # . 按均值降序排序，使图表从上到下由高到低
+    route_stats = route_stats.sort_values('mean', ascending=False).reset_index(drop=True)
+    return route_stats
+
+
+def plot_route_stops(route_stats_df):
+    """任务3可视化：绘制带误差棒的水平条形图"""
+    plt.figure(figsize=(10, 8))
+
+    # seaborn水平条形图
+    sns.barplot(data=route_stats_df, x='线路号', y='mean', hue='线路号',
+                palette='viridis', errorbar='sd', legend=False)
+
+    # 图表元素配置
+    plt.title('各线路平均搭乘站点数分布', fontsize=15, fontweight='bold')
+    plt.xlabel('线路号', fontsize=12)
+    plt.ylabel('平均搭乘站点数', fontsize=12)
+    plt.grid(axis='y', linestyle='--', alpha=0.6)  # 水平条形图通常配Y轴网格辅助读数
+
+    # 保存与释放资源
+    plt.tight_layout()
+    plt.savefig('route_stops.png', dpi=150, bbox_inches='tight')
+    print("【任务3可视化完成】图像已保存为 route_stops.png")
+    plt.show()
+    plt.close()
+
 # 执行预处理
 if __name__ == "__main__":
     try:
@@ -111,6 +146,9 @@ if __name__ == "__main__":
             print("\n 任务2执行完毕！请检查根目录是否生成 hour_distribution.png")
         else:
             print(" 警告：任务1返回空数据或失败，已跳过任务2。")
+
+        route_stats = analyze_route_stops(df_clean)
+        plot_route_stops(route_stats)
 
     except Exception as e:
         print(f" 程序运行中断: {e}")
